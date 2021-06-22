@@ -1,5 +1,8 @@
 package global.genesis.challenge.model;
 
+import java.text.DecimalFormat;
+import java.util.Locale;
+
 public class WalletPosition {
     private Float total;
     private String bestAsset;
@@ -47,12 +50,16 @@ public class WalletPosition {
         this.worstPerfomance = worstPerfomance;
     }
 
+    private String format(Float value) {
+        return String.format(Locale.US,"%.2f", value);
+    }
+
     @Override
     public String toString() {
         return  "total=" + total +
                 ", best_asset='" + bestAsset + '\'' +
-                ", best_perfomance=" + bestPerfomance +
+                ", best_perfomance=" + format(bestPerfomance) +
                 ", worst_asset='" + worstAsset + '\'' +
-                ", worst_perfomance=" + worstPerfomance;
+                ", worst_perfomance=" + format(worstPerfomance);
     }
 }

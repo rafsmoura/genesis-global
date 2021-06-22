@@ -47,7 +47,7 @@ public class WalletServiceImpl implements WalletService {
             executorService = Executors.newFixedThreadPool(3);
 
             for(WalletAsset walletAsset : walletAssets) {
-                
+
                 executorService.execute(() -> {
                     Response response = coinCapClient.send(null, CoinCapClient.ASSET_URL + walletAsset.getSymbol());
                     ApiResponse<Asset> assets = parseAssetResponse(response);
@@ -77,7 +77,7 @@ public class WalletServiceImpl implements WalletService {
             boolean finished = executorService.awaitTermination(2, TimeUnit.MINUTES);
             if (finished) {
                 Collections.sort(walletAssetList);
-                print(walletAssetList);
+                return  result(walletAssetList);
             }
 
         } catch (IOException | InterruptedException e) {
@@ -86,7 +86,7 @@ public class WalletServiceImpl implements WalletService {
         return null;
     }
 
-    private void print(List<WalletAsset> list) {
+    private String result(List<WalletAsset> list) {
         WalletPosition walletPosition = new WalletPosition();
         Float total = list.stream().map(item -> item.getAmount())
                 .reduce((float) 0,(a, b) -> a + b);
@@ -97,7 +97,7 @@ public class WalletServiceImpl implements WalletService {
         walletPosition.setWorstAsset(list.get(list.size() - 1).getSymbol());
         walletPosition.setWorstPerfomance(list.get(list.size() - 1).getRatePosition());
 
-        System.out.println(walletPosition);
+        return walletPosition.toString();
     }
 
     private void calculateAsset(WalletAsset walletAsset, History history) {
@@ -107,16 +107,18 @@ public class WalletServiceImpl implements WalletService {
 
         Float currentPosition = Float.parseFloat(walletAsset.getQuantity()) * Float.parseFloat(history.getPriceUsd());
         Float oldPosition = Float.parseFloat(walletAsset.getQuantity()) * Float.parseFloat(walletAsset.getPrice());
-        walletAsset.setRatePosition((currentPosition - oldPosition) / oldPosition * 100);
+        walletAsset.setRatePosition(((currentPosition * 100) / oldPosition) / 100);
     }
     private ApiResponse<Asset> parseAssetResponse(Response response) {
-        TypeToken<ApiResponse<Asset>> typeToken = new TypeToken<ApiResponse<Asset>>() {};
+        TypeToken<ApiResponse<Asset>> typeToken = new TypeToken<>() {
+        };
         ApiResponse<Asset> assetApiResponse = new GsonBuilder().create().fromJson(response.getJsonResponse(), typeToken.getType());
         return assetApiResponse;
     };
 
     private ApiResponse<History> parseHistoryResponse(Response response) {
-        TypeToken<ApiResponse<History>> typeToken = new TypeToken<ApiResponse<History>>() {};
+        TypeToken<ApiResponse<History>> typeToken = new TypeToken<>() {
+        };
         ApiResponse<History> assetApiResponse = new GsonBuilder().create().fromJson(response.getJsonResponse(), typeToken.getType());
         return assetApiResponse;
     };
